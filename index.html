@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Huevo de Dragón - Jolix Graphics</title>
+  <!-- Tailwind CSS para el diseño rápido -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fuentes Gamer y Pixel -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Pixelify+Sans:wght@700;900&family=Oswald:wght@700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-pixel { font-family: 'Pixelify Sans', monospace; }
+    .font-gamer { font-family: 'Oswald', sans-serif; }
+
+    /* Animación de latido constante del huevo */
+    @keyframes pulse-slow {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.4)); }
+      50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.8)); }
+    }
+    .pulse-egg {
+      animation: pulse-slow 2s infinite ease-in-out;
+    }
+
+    /* Animación rápida de click */
+    .click-active {
+      transform: scale(0.9) rotate(-3deg) !important;
+      filter: drop-shadow(0 0 40px rgba(239, 68, 68, 1)) !important;
+    }
+
+    /* Partículas de fuego flotando */
+    @keyframes float-particle {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-100px) scale(0); opacity: 0; }
+    }
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      animation: float-particle 0.8s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0c10] text-white min-h-screen flex flex-col items-center justify-start p-4 relative overflow-y-auto">
+
+  <!-- Fondo sutil con partículas flotantes estáticas -->
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.08)_0%,transparent_70%)] pointer-events-none"></div>
+
+  <!-- Contenedor Principal del Juego -->
+  <div class="w-full max-w-md bg-[#13151a] border-2 border-red-600 rounded-2xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.15)] relative z-10 my-6">
+    
+    <!-- PANTALLA EXCLUSIVA: RETO CERRADO -->
+    <div id="pantalla-cerrado" class="hidden space-y-6 text-center">
+      <span class="font-pixel bg-red-600 text-black font-black text-[10px] px-3 py-1 uppercase tracking-widest rounded skew-x-12 mb-3 inline-block">
+        [ TIEMPO AGOTADO ]
+      </span>
+      <h1 class="font-gamer text-4xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 drop-shadow-lg">
+        RETO FINALIZADO
+      </h1>
+      <p class="text-slate-400 text-sm font-semibold tracking-wide">
+        El tiempo para participar terminó hoy a las <span class="text-red-500 font-bold">22:00 hs (ARG)</span>.[cite: 1]
+      </p>
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+        <p class="text-slate-400 text-xs">¡Mirá el ranking abajo para ver quién se consagró ganador!</p>
+      </div>
+    </div>
+
+    <!-- Pantalla 1: Registro de Instagram -->
+    <div id="pantalla-registro" class="space-y-6">
+      <div class="text-center">
+        <span class="font-pixel bg-gradient-to-r from-red-600 to-amber-500 text-black font-black text-[10px] px-3 py-1 uppercase tracking-widest rounded skew-x-12 mb-3 inline-block">
+          [ RETO DRAGÓN ]
+        </span>
+        <h1 class="font-gamer text-4xl font-black uppercase italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 drop-shadow-lg">
+          CLICK THE EGG
+        </h1>
+        <p class="text-slate-400 text-xs mt-1 font-semibold tracking-wide">
+          Registrate con tu Instagram y clickeá el huevo de dragón para sumar puntos. ¡El que tenga más clics acumulados a las 22:00 hs gana! ⏱️[cite: 1]
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="font-pixel block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tu Instagram</label>
+          <input
+            type="text"
+            id="input-instagram"
+            placeholder="ej: jolix.graphics"
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-red-500 transition-colors font-semibold text-white"
+          />
+          <p id="error-registro" class="text-red-500 text-[11px] mt-1 hidden font-bold">Por favor, ingresá tu usuario de Instagram para jugar.</p>
+        </div>
+
+        <button
+          onclick="iniciarJuego()"
+          class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-gamer font-bold py-3.5 rounded-xl transition-all shadow-lg tracking-wider text-base uppercase"
+        >
+          INGRESAR AL RETO ⚔️
+        </button>
+      </div>
+    </div>
+
+    <!-- Pantalla 2: El Juego del Huevo (Sin tiempo límite individual) -->
+    <div id="pantalla-juego" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-[10px] font-bold text-slate-500 uppercase block">Jugador</span>
+          <span id="player-tag" class="text-xs font-extrabold text-red-500 font-pixel">@user</span>
+        </div>
+        <div class="text-right flex items-center space-x-2">
+          <span class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span class="text-xs font-bold text-green-500 font-pixel uppercase">PARTIDA ACTIVA</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center justify-center py-6 relative" id="egg-container">
+        <!-- Banner de alerta de hack (oculto por defecto) -->
+        <div id="cheat-alert" class="hidden absolute top-10 bg-red-600 text-black text-center font-bold px-4 py-2 rounded-lg font-pixel text-xs z-30 uppercase tracking-widest animate-bounce">
+          ⚠️ HACK DETECTADO ⚠️
+        </div>
+
+        <svg id="dragon-egg" onclick="registrarClick(event)" class="w-48 h-64 pulse-egg cursor-pointer transition-transform duration-75 select-none" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="eggGrad" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#ef4444" />
+              <stop offset="40%" stop-color="#991b1b" />
+              <stop offset="85%" stop-color="#450a0a" />
+              <stop offset="100%" stop-color="#111827" />
+            </radialGradient>
+            <linearGradient id="scaleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#f97316" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#b91c1c" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <path d="M50,10 C20,10 5,60 5,90 C5,115 25,125 50,125 C75,125 95,115 95,90 C95,60 80,10 50,10 Z" fill="url(#eggGrad)" stroke="#ef4444" stroke-width="1" />
+          <path d="M 30 110 Q 40 100 50 110 Q 60 100 70 110" fill="none" stroke="url(#scaleGrad)" stroke-width="2" />
+          <path d="M 20 90 Q 35 75 50 90 Q 65 75 80 90" fill="none" stroke="url(#scaleGrad)" stroke-width="2" />
+          <path d="M 12 70 Q 31 50 50 70 Q 69 50 88 70" fill="none" stroke="url(#scaleGrad)" stroke-width="2" />
+          <path d="M 15 50 Q 32.5 30 50 50 Q 67.5 30 85 50" fill="none" stroke="url(#scaleGrad)" stroke-width="2.5" />
+          <path d="M 28 30 Q 50 15 72 30" fill="none" stroke="#f97316" stroke-width="3" opacity="0.8" />
+        </svg>
+
+        <div class="mt-6 text-center">
+          <span class="text-slate-400 text-[11px] font-bold uppercase tracking-widest font-pixel">Tus Clics Totales</span>
+          <h2 id="contador" class="text-5xl font-black font-gamer text-white tracking-widest mt-1">0</h2>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECCIÓN DEL RANKING EN VIVO -->
+  <div class="w-full max-w-md bg-[#13151a] border border-slate-800 rounded-2xl p-5 shadow-lg relative z-10 mb-12">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+      <h3 class="font-gamer text-xl font-black tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-600">
+        🏆 TOP 10 DRAGONES
+      </h3>
+      <span class="flex h-2 w-2 relative">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+      </span>
+    </div>
+    
+    <div class="space-y-2" id="tabla-ranking">
+      <div class="text-center py-4 text-slate-500 text-xs font-semibold">Cargando posiciones...</div>
+    </div>
+  </div>
+
+  <footer class="text-slate-600 text-[10px] text-center mb-6 font-bold uppercase tracking-widest relative z-10">
+    Jolix Graphics • 2026
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // ==========================================
+    // 🛠️ CONFIGURACIÓN DE TU BASE DE DATOS FIREBASE (Credenciales de Joaquín)
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAgXKHgyU9luR07ND1QlXOmTeCBcXEI0zU",
+      authDomain: "ranking-huevo-jolix.firebaseapp.com",
+      databaseURL: "https://ranking-huevo-jolix-default-rtdb.firebaseio.com",
+      projectId: "ranking-huevo-jolix",
+      storageBucket: "ranking-huevo-jolix.firebasestorage.app",
+      messagingSenderId: "91247677241",
+      appId: "1:91247677241:web:92376c66c0ae8e63c222e8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    // ==========================================
+
+    let clicks = 0;
+    let jugando = false;
+    let instagramUsuario = "";
+    let controlDeTiempoInterval;
+    
+    // 🛡️ VARIABLES ANTI-TRAMPA (Filtros finos de autoclicker)
+    let utlimoClickTime = 0;
+    let historialDeIntervalos = [];
+    let ultimasCoordenadas = { x: 0, y: 0 };
+    let contadorCoordenadasIdenticas = 0;
+    let antiCheatActivado = false;
+
+    // 🕒 VERIFICACIÓN EN TIEMPO REAL DEL LÍMITE DE LAS 22:00 ARG
+    function verificarLimiteDeTiempo() {
+      const ahora = new Date();
+      const horas = ahora.getHours();
+      
+      if (horas >= 22) { // Corta el juego automáticamente a las 22:00
+        jugando = false;
+        clearInterval(controlDeTiempoInterval);
+        document.getElementById('pantalla-registro').classList.add('hidden');
+        document.getElementById('pantalla-juego').classList.add('hidden');
+        document.getElementById('pantalla-cerrado').classList.remove('hidden');
+        return true;
+      }
+      return false;
+    }
+
+    window.onload = function() {
+      verificarLimiteDeTiempo();
+      escucharRanking();
+      
+      // Controlar la hora del sistema cada 5 segundos para cerrar en vivo si están jugando
+      controlDeTiempoInterval = setInterval(verificarLimiteDeTiempo, 5000);
+    };
+
+    function escucharRanking() {
+      database.ref('ranking').orderByChild('score').limitToLast(10).on('value', (snapshot) => {
+        const rankingContenedor = document.getElementById('tabla-ranking');
+        rankingContenedor.innerHTML = "";
+        
+        let lista = [];
+        snapshot.forEach((childSnapshot) => {
+          lista.push(childSnapshot.val());
+        });
+        
+        lista.reverse();
+
+        if (lista.length === 0) {
+          rankingContenedor.innerHTML = `<div class="text-center py-2 text-slate-600 text-xs font-pixel">[ NO HAY REGISTROS AÚN ]</div>`;
+          return;
+        }
+
+        lista.forEach((item, index) => {
+          let medalla = `${index + 1}.`;
+          if (index === 0) medalla = "🥇";
+          if (index === 1) medalla = "🥈";
+          if (index === 2) medalla = "🥉";
+
+          const fila = document.createElement('div');
+          fila.className = "flex items-center justify-between bg-slate-950 border border-slate-900 rounded-lg px-3 py-2 text-xs font-semibold";
+          fila.innerHTML = `
+            <div class="flex items-center space-x-2">
+              <span class="w-6 text-center font-pixel text-orange-500 font-bold">${medalla}</span>
+              <span class="text-white">@${item.instagram}</span>
+            </div>
+            <span class="font-gamer text-sm text-red-500 font-bold tracking-wider">${item.score} CLICS</span>
+          `;
+          rankingContenedor.appendChild(fila);
+        });
+      });
+    }
+
+    function iniciarJuego() {
+      if (verificarLimiteDeTiempo()) return;
+
+      const input = document.getElementById('input-instagram');
+      const errorMsg = document.getElementById('error-registro');
+      instagramUsuario = input.value.trim().replace('@', '');
+
+      if (instagramUsuario === "") {
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+      errorMsg.classList.add('hidden');
+
+      // Buscar si el usuario ya tenía clics guardados previamente en la base de datos
+      database.ref('ranking/' + instagramUsuario).once('value', (snapshot) => {
+        if (snapshot.exists()) {
+          clicks = snapshot.val().score;
+        } else {
+          clicks = 0;
+        }
+        document.getElementById('contador').innerText = clicks;
+        
+        document.getElementById('player-tag').innerText = '@' + instagramUsuario;
+        document.getElementById('pantalla-registro').classList.add('hidden');
+        document.getElementById('pantalla-juego').classList.remove('hidden');
+        jugando = true;
+      });
+    }
+
+    function registrarClick(event) {
+      if (!jugando || antiCheatActivado) return;
+      if (verificarLimiteDeTiempo()) return;
+
+      const ahora = Date.now();
+      const tiempoDesdeUltimoClick = ahora - utlimoClickTime;
+
+      // 🛡️ CONTROL DE COORDENADAS IDÉNTICAS (Solo banea si clica exactamente en el mismo pixel 8 veces seguidas)
+      if (event.clientX === ultimasCoordenadas.x && event.clientY === ultimasCoordenadas.y) {
+        contadorCoordenadasIdenticas++;
+        if (contadorCoordenadasIdenticas >= 8) {
+          activarCastigoTrampa();
+          return;
+        }
+      } else {
+        contadorCoordenadasIdenticas = 0;
+      }
+      ultimasCoordenadas = { x: event.clientX, y: event.clientY };
+
+      // 🛡️ CONTROL DE RITMO DE METRÓNOMO (Autoclickers de precisión matemática)
+      if (utlimoClickTime !== 0) {
+        historialDeIntervalos.push(tiempoDesdeUltimoClick);
+        if (historialDeIntervalos.length > 12) {
+          historialDeIntervalos.shift();
+          
+          let suma = 0;
+          historialDeIntervalos.forEach(val => suma += val);
+          let promedio = suma / historialDeIntervalos.length;
+
+          let variacionSuma = 0;
+          historialDeIntervalos.forEach(val => variacionSuma += Math.abs(val - promedio));
+          
+          // Tolerancia mínima de variación: 1.5ms. Menor a esto es bot.
+          if (variacionSuma / historialDeIntervalos.length < 1.5) {
+            activarCastigoTrampa();
+            return;
+          }
+        }
+      }
+      utlimoClickTime = ahora;
+
+      // Incrementar clics locales
+      clicks++;
+      document.getElementById('contador').innerText = clicks;
+
+      // 🚀 GUARDADO DINÁMICO EN FIREBASE (Se actualiza con cada clic)
+      database.ref('ranking/' + instagramUsuario).set({
+        instagram: instagramUsuario,
+        score: clicks,
+        timestamp: Date.now()
+      });
+
+      const egg = document.getElementById('dragon-egg');
+      egg.classList.add('click-active');
+      setTimeout(() => {
+        egg.classList.remove('click-active');
+      }, 75);
+
+      crearParticulaFuego(event.clientX, event.clientY);
+    }
+
+    function activarCastigoTrampa() {
+      antiCheatActivado = true;
+      clicks = 0;
+      document.getElementById('contador').innerText = "0";
+      
+      // Reiniciar y descalificar en la base de datos de Firebase
+      database.ref('ranking/' + instagramUsuario).set({
+        instagram: instagramUsuario,
+        score: 0,
+        timestamp: Date.now()
+      });
+
+      const alertBox = document.getElementById('cheat-alert');
+      alertBox.classList.remove('hidden');
+
+      const egg = document.getElementById('dragon-egg');
+      egg.style.filter = "grayscale(100%) brightness(50%)";
+      egg.classList.remove('pulse-egg');
+      egg.style.cursor = "not-allowed";
+
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100, 50, 200]);
+      }
+    }
+
+    function crearParticulaFuego(x, y) {
+      if (antiCheatActivado) return;
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      const size = Math.random() * 8 + 4;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      particle.style.left = (x - size / 2) + 'px';
+      particle.style.top = (y - size / 2) + 'px';
+      particle.style.borderRadius = '50%';
+      const colors = ['#ef4444', '#f97316', '#facc15'];
+      particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      particle.style.boxShadow = `0 0 10px ${particle.style.backgroundColor}`;
+
+      document.body.appendChild(particle);
+      setTimeout(() => {
+        particle.remove();
+      }, 800);
+    }
+  </script>
+
+</body>
+</html>
