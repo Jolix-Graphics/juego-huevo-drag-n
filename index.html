@@ -58,7 +58,7 @@
         RETO FINALIZADO
       </h1>
       <p class="text-slate-400 text-sm font-semibold tracking-wide">
-        El tiempo para participar terminó hoy a las <span class="text-red-500 font-bold">22:00 hs (ARG)</span>.
+        El tiempo para participar terminó hoy a las <span class="text-red-500 font-bold">22:00 hs (ARG)</span>.[cite: 1]
       </p>
       <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
         <p class="text-slate-400 text-xs">¡Mirá el ranking abajo para ver quién se consagró ganador!</p>
@@ -75,7 +75,7 @@
           CLICK THE EGG
         </h1>
         <p class="text-slate-400 text-xs mt-1 font-semibold tracking-wide">
-          Registrate con tu Instagram y clickeá el huevo de dragón para sumar puntos. ¡El que tenga más clics acumulados a las 22:00 hs gana! ⏱️
+          Registrate con tu Instagram y clickeá el huevo de dragón para sumar puntos. ¡El que tenga más clics acumulados a las 22:00 hs gana! ⏱️[cite: 1]
         </p>
       </div>
 
@@ -100,7 +100,7 @@
       </div>
     </div>
 
-    <!-- Pantalla 2: El Juego del Huevo -->
+    <!-- Pantalla 2: El Juego del Huevo (Sin tiempo límite individual) -->
     <div id="pantalla-juego" class="hidden space-y-6">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
@@ -117,11 +117,6 @@
       </div>
 
       <div class="flex flex-col items-center justify-center py-6 relative" id="egg-container">
-        <!-- Banner de alerta de hack -->
-        <div id="cheat-alert" class="hidden absolute top-10 bg-red-600 text-black text-center font-bold px-4 py-2 rounded-lg font-pixel text-xs z-30 uppercase tracking-widest animate-bounce">
-          ⚠️ HACK DETECTADO ⚠️
-        </div>
-
         <svg id="dragon-egg" onclick="registrarClick(event)" class="w-48 h-64 pulse-egg cursor-pointer transition-transform duration-75 select-none" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="eggGrad" cx="40%" cy="40%" r="60%">
@@ -198,13 +193,6 @@
     let jugando = false;
     let instagramUsuario = "";
     let controlDeTiempoInterval;
-    
-    // 🛡️ VARIABLES ANTI-TRAMPA
-    let utlimoClickTime = 0;
-    let historialDeIntervalos = [];
-    let ultimasCoordenadas = { x: 0, y: 0 };
-    let contadorCoordenadasIdenticas = 0;
-    let antiCheatActivado = false;
 
     // 🕒 VERIFICACIÓN EN TIEMPO REAL DEL LÍMITE DE LAS 22:00 ARG
     function verificarLimiteDeTiempo() {
@@ -297,47 +285,10 @@
     }
 
     function registrarClick(event) {
-      if (!jugando || antiCheatActivado) return;
+      if (!jugando) return;
       if (verificarLimiteDeTiempo()) return;
 
-      const ahora = Date.now();
-      const tiempoDesdeUltimoClick = ahora - utlimoClickTime;
-
-      // 🛡️ CONTROL DE COORDENADAS IDÉNTICAS (Solo banea si clica exactamente en el mismo pixel 8 veces seguidas)
-      if (event.clientX === ultimasCoordenadas.x && event.clientY === ultimasCoordenadas.y) {
-        contadorCoordenadasIdenticas++;
-        if (contadorCoordenadasIdenticas >= 8) {
-          activarCastigoTrampa();
-          return;
-        }
-      } else {
-        contadorCoordenadasIdenticas = 0;
-      }
-      ultimasCoordenadas = { x: event.clientX, y: event.clientY };
-
-      // 🛡️ CONTROL DE RITMO DE METRÓNOMO (Autoclickers de precisión matemática)
-      if (utlimoClickTime !== 0) {
-        historialDeIntervalos.push(tiempoDesdeUltimoClick);
-        if (historialDeIntervalos.length > 12) {
-          historialDeIntervalos.shift();
-          
-          let suma = 0;
-          historialDeIntervalos.forEach(val => suma += val);
-          let promedio = suma / historialDeIntervalos.length;
-
-          let variacionSuma = 0;
-          historialDeIntervalos.forEach(val => variacionSuma += Math.abs(val - promedio));
-          
-          // Tolerancia mínima de variación: 1.5ms. Menor a esto es bot.
-          if (variacionSuma / historialDeIntervalos.length < 1.5) {
-            activarCastigoTrampa();
-            return;
-          }
-        }
-      }
-      utlimoClickTime = ahora;
-
-      // Incrementar clics locales
+      // Incrementar clics locales sin ningún tipo de control restrictivo
       clicks++;
       document.getElementById('contador').innerText = clicks;
 
@@ -357,33 +308,7 @@
       crearParticulaFuego(event.clientX, event.clientY);
     }
 
-    function activarCastigoTrampa() {
-      antiCheatActivado = true;
-      clicks = 0;
-      document.getElementById('contador').innerText = "0";
-      
-      // Reiniciar y descalificar en la base de datos de Firebase
-      database.ref('ranking/' + instagramUsuario).set({
-        instagram: instagramUsuario,
-        score: 0,
-        timestamp: Date.now()
-      });
-
-      const alertBox = document.getElementById('cheat-alert');
-      alertBox.classList.remove('hidden');
-
-      const egg = document.getElementById('dragon-egg');
-      egg.style.filter = "grayscale(100%) brightness(50%)";
-      egg.classList.remove('pulse-egg');
-      egg.style.cursor = "not-allowed";
-
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100, 50, 200]);
-      }
-    }
-
     function crearParticulaFuego(x, y) {
-      if (antiCheatActivado) return;
       const particle = document.createElement('div');
       particle.className = 'particle';
       const size = Math.random() * 8 + 4;
