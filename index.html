@@ -117,6 +117,7 @@
       </div>
 
       <div class="flex flex-col items-center justify-center py-6 relative" id="egg-container">
+        <!-- SVG del Huevo de Dragón -->
         <svg id="dragon-egg" onclick="registrarClick(event)" class="w-48 h-64 pulse-egg cursor-pointer transition-transform duration-75 select-none" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="eggGrad" cx="40%" cy="40%" r="60%">
@@ -288,7 +289,7 @@
       if (!jugando) return;
       if (verificarLimiteDeTiempo()) return;
 
-      // Incrementar clics locales sin ningún tipo de control restrictivo
+      // Incrementar clics locales sin ningún tipo de control
       clicks++;
       document.getElementById('contador').innerText = clicks;
 
