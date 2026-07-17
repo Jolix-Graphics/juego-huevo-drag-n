@@ -58,10 +58,10 @@
         RETO FINALIZADO
       </h1>
       <p class="text-slate-400 text-sm font-semibold tracking-wide">
-        El tiempo para participar terminó hoy a las <span class="text-red-500 font-bold">22:00 hs (ARG)</span>.
+        El tiempo para participar terminó el viernes a las <span class="text-red-500 font-bold">22:00 hs (ARG)</span>.
       </p>
       <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
-        <p class="text-slate-400 text-xs">¡Mirá el ranking abajo para ver quién se consagró ganador!</p>
+        <p class="text-slate-400 text-xs font-semibold">¡Mirá el ranking abajo para ver quién se consagró ganador! 🏆</p>
       </div>
     </div>
 
@@ -75,7 +75,7 @@
           CLICK THE EGG
         </h1>
         <p class="text-slate-400 text-xs mt-1 font-semibold tracking-wide">
-          Registrate con tu Instagram y clickeá el huevo de dragón para sumar puntos. ¡El que tenga más clics acumulados a las 22:00 hs gana! ⏱️
+          Registrate con tu Instagram y clickeá el huevo de dragón para sumar puntos. ¡El que tenga más clics acumulados mañana a las 22:00 hs gana! ⏱️
         </p>
       </div>
 
@@ -195,12 +195,14 @@
     let instagramUsuario = "";
     let controlDeTiempoInterval;
 
-    // 🕒 VERIFICACIÓN EN TIEMPO REAL DEL LÍMITE DE LAS 22:00 ARG
+    // 🕒 FECHA LÍMITE ABSOLUTA: Viernes 17 de Julio de 2026 a las 22:00:00 (GMT-3 de Argentina)
+    const FECHA_LIMITE = new Date("2026-07-17T22:00:00-03:00").getTime();
+
+    // 🕒 VERIFICACIÓN EN TIEMPO REAL DEL LÍMITE COMPARANDO TIMESTAMPS
     function verificarLimiteDeTiempo() {
-      const ahora = new Date();
-      const horas = ahora.getHours();
+      const ahora = new Date().getTime();
       
-      if (horas >= 22) { // Corta el juego automáticamente a las 22:00
+      if (ahora >= FECHA_LIMITE) { // Corta el juego automáticamente al pasar la hora exacta
         jugando = false;
         clearInterval(controlDeTiempoInterval);
         document.getElementById('pantalla-registro').classList.add('hidden');
@@ -215,8 +217,8 @@
       verificarLimiteDeTiempo();
       escucharRanking();
       
-      // Controlar la hora del sistema cada 5 segundos para cerrar en vivo si están jugando
-      controlDeTiempoInterval = setInterval(verificarLimiteDeTiempo, 5000);
+      // Controlar el fin del evento de manera precisa cada 1 segundo
+      controlDeTiempoInterval = setInterval(verificarLimiteDeTiempo, 1000);
     };
 
     function escucharRanking() {
@@ -261,7 +263,7 @@
 
       const input = document.getElementById('input-instagram');
       const errorMsg = document.getElementById('error-registro');
-      instagramUsuario = input.value.trim().replace('@', '');
+      instagramUsuario = input.value.trim().replace('@', '').toLowerCase(); // Normalizamos siempre a minúsculas
 
       if (instagramUsuario === "") {
         errorMsg.classList.remove('hidden');
@@ -289,7 +291,7 @@
       if (!jugando) return;
       if (verificarLimiteDeTiempo()) return;
 
-      // Incrementar clics locales sin ningún tipo de control restrictivo
+      // Incrementar clics locales
       clicks++;
       document.getElementById('contador').innerText = clicks;
 
